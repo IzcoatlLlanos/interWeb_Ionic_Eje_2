@@ -1,49 +1,40 @@
-import { Injectable } from "@angular/core";
-import { Task } from '../interfaces/task';
+import { Injectable } from '@angular/core';
 
 @Injectable({
-    providedIn: 'root',
+  providedIn: 'root'
 })
 export class TaskService {
-    private tasks: Task[] = [];
-    
-    constructor() {}
-    
 
-    public getTasks(): Task[] {
-        return this.tasks;
-    }
-    public addTask(task: Task): void {
-        this.tasks.push(task);
-      }
+  private tasks: string[] = [];
+  private completedTask: string[] = [];
 
-    public completeTask(index: number): void {
-      this.tasks.filter((task) => !task.completed)[index].completed = true;
-    }
+  constructor() { 
+    this.tasks.push("Tarea 1");
+    this.tasks.push("Tarea 2");
+  }
 
-    public uncompleteTask(index: number): void {
-      this.tasks.filter((task) => task.completed)[index].completed = false;
-    }
+  public getTasks():string[]{
+    return this.tasks;
+  }
 
-    public deleteTask(task: Task): void {
-      const index = this.tasks.indexOf(task);
-      this.tasks.splice(index, 1);
-    }
+  public getCompletedTasks():string[]{
+    return this.completedTask;
+  }
 
-    public getTask(index: number): Task {
-      return this.tasks.filter((task) => !task.completed)[index];
-    }
+  public completeTask(pos:number){
+    this.completedTask.push(this.tasks[pos]);
+    this.tasks.splice(pos, 1);
+    return this.tasks;
+  }
 
-    public updateTask(oldTask: Task, newTask: Task): void {
-      const index = this.tasks.indexOf(oldTask);
-      this.tasks[index] = newTask;
-    }
+  public newTask(task:string){
+    this.tasks.push(task);
+    return this.tasks;
+  }
 
-    public getCompletedTasks(): Task[] {
-      return this.tasks.filter((task) => task.completed);
-    }
-    
-    public getPendingTasks(): Task[] {
-        return this.tasks.filter((task) => !task.completed);
-    }
-    }
+  public uncompleteTask(task: string,pos: number): string {
+    this.completedTask.splice(pos, 1);
+    this.tasks.push(task);
+    return task;
+  }
+}

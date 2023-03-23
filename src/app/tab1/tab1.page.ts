@@ -1,114 +1,107 @@
-import { AfterViewInit, Component, ViewChild } from '@angular/core';
-import { AlertController, IonInput } from '@ionic/angular';
+import { Component, ViewChild } from '@angular/core';
+import { AlertController, IonInput, IonList, ToastController } from '@ionic/angular';
 import { TaskService } from '../services/task.service';
-import { Task } from '../interfaces/task';
-import { OverlayEventDetail } from '@ionic/core';
 
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
-  styleUrls: ['tab1.page.scss'],
+  styleUrls: ['tab1.page.scss']
 })
 export class Tab1Page {
-  tasks: Task[] = [];
-  task: Task = { name: '', completed: false };
-  @ViewChild('input') input!: IonInput;
 
-  constructor(
-    private taskService: TaskService,
-    private alertController: AlertController
-  ) {}
+  @ViewChild('intask', { static: false }) myInput!: IonInput;
+  @ViewChild('lisliding', { static: false }) mySliding!: IonList;
 
-  ionViewDidEnter() {
-    this.input.setFocus();
-    this.tasks = this.taskService.getPendingTasks();
+  public isContentLoaded: boolean = false;
+
+  public tasks: string[] = new Array();
+  public task: string = "";
+
+  constructor(private toastController: ToastController, 
+    private alertController: AlertController,
+    private taskService:TaskService) {
+      this.tasks = this.taskService.getTasks();
   }
 
-  public completeTask(index: number) {
-    this.taskService.completeTask(index);
-    this.tasks = this.taskService.getPendingTasks();
+  async presentToast(message: string, color: string) {
+    const toast = await this.toastController.create({
+      message: message,
+      duration: 3000,
+      cssClass: color
+    });
+    await toast.present();
   }
 
-  public async deleteTask(task: Task) {
-    this.taskService.deleteTask(task);
-    this.tasks = this.taskService.getPendingTasks();
+  async presentAlert(pos: number) {
+    const alert = await this.alertController.create({
+      header: 'Seguro que desea completar la tarea '+this.tasks[pos],
+      buttons: [
+        {
+          text: 'NO',
+          role: 'cancel',
+          handler: () => {
+            this.presentToast("Se canceló la acción", "red");
+            this.myInput.setFocus();
+            this.mySliding.closeSlidingItems();
+          },
+        },
+        {
+          text: 'SI',
+          role: 'confirm',
+          handler: () => {
+            this.completeTask(pos);
+            this.myInput.setFocus();
+            this.mySliding.closeSlidingItems();
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
+  getColor(type: string): string {
+    let color = "";
+    switch (type) {
+      case "Abarrotes":
+        color = "primary";
+        break;
+      case "Limpieza":
+        color = "success";
+        break;
+      case "Mascotas":
+        color = "warning";
+        break;
+      default:
+        break;
+    }
+    return color;
+  }
+
+  public completeTask(pos: number) {
+    this.tasks = this.taskService.completeTask(pos);
+    this.presentToast("Tarea compleda", "green");
   }
 
   public newTask() {
-    if (this.task.name === '' || this.task === null) return;
-    this.taskService.addTask({ ...this.task });
-    this.task.name = '';
-    this.input.setFocus();
-    this.tasks = this.taskService.getPendingTasks();
+    if (this.task) {
+      this.tasks = this.taskService.newTask(this.task);
+      console.log(this.tasks);
+      this.task = "";
+      this.presentToast("Tarea añadida con éxito", "green");
+    } else {
+      this.presentToast("La tarea no puede estar vacía", "red")
+    }
+    this.myInput.setFocus();
+
   }
 
-  public async updateTask(task: Task) {
-    const alert = await this.alertController.create({
-      header: 'Editar tarea',
-      inputs: [
-        {
-          name: 'name',
-          type: 'text',
-          value: task.name,
-          placeholder: 'Nombre de la tarea',
-        },
-      ],
-      buttons: [
-        {
-          text: 'Cancelar',
-          role: 'cancel',
-          cssClass: 'secondary',
-        },
-        {
-          text: 'Editar',
-          handler: async (data) => {
-            this.confirmationDialog(
-              '¿Desea editar la tarea?',
-              undefined,
-              (respuesta: OverlayEventDetail) => {
-                if (respuesta.role !== 'confirm') return;
-                this.taskService.updateTask(task, {
-                  name: data.name,
-                  completed: false,
-                });
-                this.tasks = this.taskService.getPendingTasks();
-                alert.dismiss();
-              }
-            );
-            return false;
-          },
-        },
-      ],
-    });
-    alert.present();
+  public validateTask() {
+    return this.task ? "false" : "true";
   }
 
-  private async confirmationDialog(
-    header: string,
-    handler?: Function,
-    dismissFunction?: Function
-  ) {
-    const alert = await this.alertController.create({
-      header,
-      buttons: [
-        {
-          text: 'Cancelar',
-          role: 'cancel',
-          cssClass: 'secondary',
-        },
-        {
-          text: 'Confirmar',
-          role: 'confirm',
-          cssClass: 'primary',
-          handler: () => {
-            if (handler) handler();
-          },
-        },
-      ],
-    });
-    alert.present();
-    alert.onDidDismiss().then((respuesta) => {
-      if (dismissFunction) dismissFunction(respuesta);
-    });
+  ionViewDidEnter() {
+    this.isContentLoaded = true;
   }
+
 }
