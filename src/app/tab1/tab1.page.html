@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
       <ion-title>
-          Tab 1
+          Nueva Tarea
       </ion-title>
   </ion-toolbar>
 </ion-header>
@@ -29,8 +29,8 @@
                           {{item}}
                       </ion-item>
                       <ion-item-options side="end" (ionSwipe)="presentAlert(i)">
-                          <ion-item-option color="warning" expandable>
-                              <ion-icon name="trash"></ion-icon>
+                          <ion-item-option color="success" expandable (click)="presentAlert(i)">
+                              <ion-icon name="checkmark" ></ion-icon>
                           </ion-item-option>
                       </ion-item-options>
                   </ion-item-sliding>
